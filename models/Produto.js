@@ -13,3 +13,4 @@ const Produto = conexao.Banco.define("produtos",{
     }
 })
 
+module.exports = Produto
