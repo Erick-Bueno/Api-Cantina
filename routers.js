@@ -8,6 +8,7 @@ const conection_mysql = require("./models/connectionMysql")
 const { response } = require("express")
 const vendaController = require("./controllers/venda_controller")
 const nodemon = require("nodemon")
+const cliente = require("./models/Cliente")
 //PRODUTOS
 //adicionar produto
 router.post("/produto/add", produtoController.adicionarProduto)
@@ -19,6 +20,8 @@ router.get("/produto/:id", produtoController.listarProdutoEspecifico)
 router.delete("/produto/:id", produtoController.deletarProduto)
 //atualizar produto
 router.put("/produto/:id",produtoController.atualizarProduto)
+//pesquisar produto
+router.post("/produto/pesquisar", produtoController.pesqProd)
 
 //Vendas
 //venda efetuada
@@ -26,106 +29,169 @@ router.post("/venda/add", vendaController.efetuarVenda)
 
 //teste array de produtos estoque
 
-router.post("/vendas/est", async function(req, res){
+router.post("/vendas/est", produtoController.AddProds)
 
-    const produtoss = req.body
-    let vendas = []
-    let lucrototal = 0
-    let preço_item = 0
-    codigo_venda = `${Math.round(Math.random()*10)}${Math.round(Math.random()*10)}${Math.round(Math.random()*10)}${Math.round(Math.random()*10)}`
+//clientes
+//listar clientes
+router.get("/clientes", async function(req, res){
+    try {
+    const dados = await cliente.findAll()
+    const resp = dados.map(function(d){
+        return {
+            
+            "id": d.id,
+            "Nome": d.Nome,
+            "Numero":d.Telefone,
 
-    for(let i = 0; i < produtoss.produtos.length; i = i + 1){
-        function verificar_estoque(){
-            return new Promise((resolve, reject) => {
-                conection_mysql.con.query(`select * from produtos where id = ${produtoss.produtos[i].idProduto}`, function(error, results){
-                    if(error){
-                        return reject(error)
-    
-                    }return resolve(results)
-                })
-            })
-        }let dado = await verificar_estoque()  
-        if(dado.length == 0){
-           return res.status(400).send("produto inexistente")
-        }  
-        let controle_estoque = dado[0].Quantidade - produtoss.produtos[i].quantidade
-        function atualizar_estoque(){
-            return new Promise((resolve, reject) => {
-               conection_mysql.con.query(`update produtos set Quantidade = ${controle_estoque} where id = ${produtoss.produtos[i].idProduto}`, function(error, results){
-                    if(error){
-                        return reject (error)
-                    }return resolve(results)
-                })
-            })
         }
-        const att = await atualizar_estoque()
-        preço_item = dado[0].Preço *produtoss.produtos[i].quantidade
-        lucrototal = lucrototal + preço_item
         
-        function lucro_item(){
-               return new Promise((resolve, reject) => {
-                conection_mysql.con.query(`insert into financeiroo (nome, lucro_porItem) values ('${dado[0].Nome}', '${preço_item}')`, function(error, results){
-                        if(error){
-                            return reject(error)
-                        }return resolve(results)
-                    })
-                
-                 
-               }) 
-             
-            }     
-               
-            
-           const dudu = await lucro_item() 
-           function lucro_venda(){
-            return new Promise((resolve, reject) => {
-                conection_mysql.con.query(`insert into financeirooo(lucro_porVenda) values (${lucrototal}) `, function(error, results){
-                    if (error){
-                        return reject(error)
-                    }return resolve(results)
-                })
-            })
-           
-         }
-         function adicionar_venda(){
-            return new Promise((resolve, reject) => {
-                conection_mysql.con.query(`insert into venda(id_produto, nome, Preço, quantidade, lucro_do_produto, lucrototal, Codigo_da_venda) values(${produtoss.produtos[i].idProduto}, '${dado[0].Nome}', ${dado[0].Preço}, ${ produtoss.produtos[i].quantidade}, ${preço_item}, ${lucrototal}, ${codigo_venda})`, function(error, results){
-                    if (error){
-                        return reject(error)
-                    }return resolve(results)
-                })
-            })
-         }
-        let add_venda = await adicionar_venda()
-        let dadus = await lucro_venda()
-      
-        let lista = {
-            "vendas":{
-
-            }
-        }
-      
-           
-            lista.vendas = {
-                "mensagem" : "item vendido",
-                "id_produto": produtoss.produtos[i].idProduto,
-                "nome": dado[0].Nome,
-                "Preço":dado[0].Preço,
-                "quantidade": produtoss.produtos[i].quantidade,
-                "lucro_do_produto": preço_item
-                
-            }
-            vendas.unshift(lista.vendas)
-             
-           
+    })
+    return res.status(200).send(resp)
+    } catch (error) {
+        return res.status(400).send(error)
+    }
     
-            
-          
-        }    
-        return res.send({
-        vendas,
-        "lucrototal": lucrototal}) 
-   
+
 })
 
+//adicionar cliente
+router.post("/clientes/add", async function(req, res){
+    const {Nome, Telefone} = req.body
+    try {
+        const add = await cliente.create({
+            Nome: Nome,
+            Telefone: Telefone
+        })
+        const resp = {
+            "Mensagem": "Cliente Adicionado com sucesso",
+            "Nome" : Nome,
+            "Telefone": Telefone,
+            request:{
+                "Tipo": "GET",
+                "Descrição":"Listagem de todos os clientes",
+                "URL":"http://localhost:8040/clientes"
+            }
+        }
+        return res.status(200).send(resp)
+    } catch (error) {
+        return res.status(404).send(error)
+    }
+}),
+//listar unico cliente
+router.get("/clientes/:id", async function(req, res){
+    const id = req.params.id
+    try {
+        const reg = await cliente.findByPk(id)
+        
+        if(!reg){
+            return res.status(404).send("cliente não encontrado")
+        }
+        const resp = 
+    
+             {
+                "Mensagem": "listagem de unico cliente",
+                "Id": reg.id,
+                "Nome": reg.Nome,
+                "Telefone": reg.Telefone,
+                request:{
+                    "Tipo":"GET",
+                    "Descrição": "Listar todos os usuarios",
+                    "URL": "http://localhost:8040/clientes"
+                }
+                
+            }
+        
+        return res.status(200).send(resp)
+    
+    } catch (error) {
+        return res.status(400).send(error)
+    }
+})
+//atualizar
+router.put("/clientes/:id", async function(req, res){
+    const{Nome, Telefone} = req.body
+    const id = req.params.id
+    try {
+        const reg = await cliente.findByPk(id)
+        if(!reg){
+            return res.status(404).send("cliente não encontrado")
+        }
+        const att = await cliente.update({
+            Nome: Nome,
+            Telefone: Telefone
+        },
+        {
+            where:{
+                id: id
+            }
+        }
+        )
+        const resp = {
+            "Mensagem": "Cliente Atualizado Com Sucesso",
+            "Nome": Nome,
+            "Telefone": Telefone,
+            request:{
+                "Tipo": "GET",
+                "Descrição": "Listagem de unico Cliente",
+                "URL": `http://localhost:8040/clientes/${id}`
+            }
+        }
+        return res.status(200).send(resp)
+    } catch (error) {
+        return res.status(400).send(error)
+    }
+   
+    
+})
+//deletar cliente
+router.delete("/clientes/:id", async function(req, res){
+    const id = req.params.id
+    try {
+        const reg = await cliente.findByPk(id)
+        if(!reg){
+            return res.status(400).send("cliente não encontrado")
+        }
+        const del = await cliente.destroy({where:{id:id}})
+        const resp = {
+            "Mensagem": "Cliente deletado com sucesso",
+            request:{
+                "tipo": "GET",
+                "descrição": "Listagem de unico cliente",
+                "URL": `http://localhost:8040/clientes/${id}`
+            }
+        }
+        return res.status(200).send(resp)
+    } catch (error) {
+        
+    }
+})
+//pesquisar cliente
+router.post("/clientes/pesq", async function(req, res){
+    const{pesqCliente} = req.body
+    function pesquisar_cli(){
+        return new Promise((resolve, reject) => {
+            conection_mysql.con.query(`select id, Nome, Telefone from clientes where Nome like '%${pesqCliente}%' `, function( error, results){
+                if(error){
+                    return reject(error)
+                }return resolve(results)
+            })
+        })
+    }
+    try {
+        const peq = await pesquisar_cli()
+        if(peq.length == 0){
+            return res.status(200).send("nenhum cliente encontrado")
+        }
+        const resp = peq.map(function(c){
+            return{
+                "id": c.id,
+                "Nome": c.Nome,
+                "Telefone": c.Telefone
+            }
+        })
+        return res.status(200).send(resp)
+    } catch (error) {
+        return res.status(404).send(error)
+    }
+})
 module.exports = router
