@@ -219,6 +219,8 @@ exports.AddProds =  async function(req, res){
     let vendas = []
     let lucrototal = 0
     let preço_item = 0
+   
+
     codigo_venda = `${Math.round(Math.random()*10)}${Math.round(Math.random()*10)}${Math.round(Math.random()*10)}${Math.round(Math.random()*10)}`
 
     for(let i = 0; i < produtoss.produtos.length; i = i + 1){
@@ -276,7 +278,7 @@ exports.AddProds =  async function(req, res){
          }
          function adicionar_venda(){
             return new Promise((resolve, reject) => {
-                conection_mysql.con.query(`insert into venda(id_produto, nome, Preço, quantidade, lucro_do_produto, lucrototal, Codigo_da_venda) values(${produtoss.produtos[i].idProduto}, '${dado[0].Nome}', ${dado[0].Preço}, ${ produtoss.produtos[i].quantidade}, ${preço_item}, ${lucrototal}, ${codigo_venda})`, function(error, results){
+                conection_mysql.con.query(`insert into venda(id_produto, nome, Preço, quantidade, lucro_do_produto, lucrototal, Codigo_da_venda, data_venda) values(${produtoss.produtos[i].idProduto}, '${dado[0].Nome}', ${dado[0].Preço}, ${ produtoss.produtos[i].quantidade}, ${preço_item}, ${lucrototal}, ${codigo_venda}, now())`, function(error, results){
                     if (error){
                         return reject(error)
                     }return resolve(results)
