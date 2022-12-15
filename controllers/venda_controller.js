@@ -60,3 +60,22 @@ exports.efetuarVenda = async function(req, res){
         return res.status(404).send("produto não encontrado no estoque")
     }
 }
+
+exports.deletarVend = async function(req, res){
+    try {
+        async function delet_all(){
+            return new Promise((resolve, reject) => {
+                conection_mysql.con.query("truncate table carrinhos", function(error, results){
+                    if(error){
+                        return reject(error)
+                    }return resolve(results)
+                })
+            })
+        }
+        const dado = await delet_all()
+        return res.status(200).send("deletado")
+    } catch (error) {
+        return res.status(404).send(error)
+    }
+  
+}

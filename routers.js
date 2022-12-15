@@ -11,6 +11,8 @@ const nodemon = require("nodemon")
 const cliente = require("./models/Cliente")
 const clienteController = require("./controllers/cliente_controller")
 const carrinho = require("./models/Carrinho")
+const carrinhoController = require("./controllers/carrinho_controller")
+const relatorioController = require("./controllers/Relatorio_controller")
 //PRODUTOS
 //adicionar produto
 router.post("/produto/add", produtoController.adicionarProduto)
@@ -52,85 +54,42 @@ router.post("/clientes/pesq", clienteController.pesqCliente)
 
 //carrinho
 //listar produtos no carrinho 
-router.get("/carrinho", async function(req, res){
-    try {
-    const dados = await carrinho.findAll()
-    const resp = dados.map(function(d){
-        return{
-            "id": d.id,
-            "Nome": d.Nome,
-            "Quantidade": d.Quantidade
-        }
-    })
-    return res.status(200).send(resp)
-} catch (error) {
-     return res.status(404).send(error)   
-    }
-    
-})
+router.get("/carrinho", carrinhoController.listarCart )
 //adicionar produto no carrinho
-router.post("/carrinho/add", async function(req, res){
-    const {Nome, Quantidade} = req.body
-    try {
-        const dados = await carrinho.create({
-            Nome:Nome,
-            Quantidade: Quantidade
-        })
-        const resp = {
-            "Mensagem": "Produto Adicionado ao carrinho",
-            "Nome": Nome,
-            "Quantidade": Quantidade
-        }
-        return res.status(200).send(resp)
-    } catch (error) {
-        return res.status(404).send(error)
-    }
-})
+router.post("/carrinho/add", carrinhoController.AddProdCart)
 //excluir produto do carrinho
-router.delete("/carrinho/:id", async function(req, res){
-    try {
-        const id = req.params.id
-        const ver = await carrinho.findByPk(id)
-        if(!ver){
-            return res.status(200).send("produto não encontrado")
-        }
-        const del = carrinho.destroy({where:{id: id}})
-        const resp ={
-            "mensagem": "Produto deletado do carrinho"
-        }
-        return res.status(200).send(resp)
-    } catch (error) {
-        return res.status(200).send(error)
-    }
-})
+router.delete("/carrinho/:id", carrinhoController.DelPordCart)
 
 //atualizar produto do carrinho
-router.put("/carrinho/:id", async function(req, res){
-    try {
-        const id = req.params.id
-        const{Nome, Quantidade} = req.body
-        const dado = carrinho.findByPk(id)
-        if(!dado){
-            return res.status(200).send("produto não encontrado no carrinho")
-        }
-        const att = carrinho.update(
-            {
-            Nome: Nome,
-            Quantidade: Quantidade
-            },
-            {
-                where:{
-                    id:id
-                }
-            }
-        )
-        const resp = {
-            "Nome": Nome,
-            "Quantidade": Quantidade
-        }
-        return res.status(200).send(resp)
-    } catch (error) {
-        return res.status(404).send(error)
-    }
-})
+router.put("/carrinho/:id", carrinhoController.attProdCart)
+
+router.post("/encontrar", carrinhoController.encontrar)
+router.delete("/deletarvenda", vendaController.deletarVend)
+
+//relatorios
+//janeiro
+router.get("/janeiro", relatorioController.reljaneiro)
+//fevereiro
+router.get("/fevereiro", relatorioController.relfevereiro)
+//março
+router.get("/marco", relatorioController.relmarço)
+//abril
+router.get("/abril", relatorioController.relabril)
+//maio 
+router.get("/maio", relatorioController.relmaio)
+//junho
+router.get("/junho",relatorioController.reljunho)
+
+//julho
+router.get("/julho", relatorioController.reljulho)
+//agosto
+router.get("/agosto", relatorioController.relagosto)
+//setembro
+router.get("/setembro", relatorioController.relsetembro)
+//outubro
+router.get("/outubro", relatorioController.reloutubro)
+//novembro
+router.get("/novembro", relatorioController.relnovembro)
+//dezembro
+router.get("/dezembro", relatorioController.reldezembro)
 module.exports = router

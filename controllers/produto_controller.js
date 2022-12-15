@@ -216,6 +216,7 @@ exports.atualizarProduto =  async function(req, res){
 exports.AddProds =  async function(req, res){
 
     const produtoss = req.body
+    console.log(produtoss)
     let vendas = []
     let lucrototal = 0
     let preço_item = 0
